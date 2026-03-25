@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Estoque - Beep Estoque</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        .vencido { background: #ffcccc !important; }
+        .perto   { background: #ffe5cc !important; }
+        .alerta  { background: #fff7cc !important; }
+        .normal  { background: #e7ffe7 !important; }
+
+        .acao-btn {
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            font-size: 14px;
+            border: none;
+        }
+
+        .btn-lote { background:#ffca7a; }
+        .btn-produto { background:#ff7a7a; color:white; }
+
+        .acao-btn:hover { opacity: 0.8; }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+
+    <!-- MENU LATERAL -->
+    <div class="sidebar bg-dark text-white p-3" style="width:260px; min-height:100vh;">
+        <h4 class="text-center mb-4">Beep Estoque</h4>
+
+        <h6 class="text-secondary">MOVIMENTAÇÕES</h6>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item"><a href="/entrada" class="nav-link text-white"><i class="bi bi-plus-circle"></i> Entrada</a></li>
+            <li class="nav-item"><a href="/saida" class="nav-link text-white"><i class="bi bi-dash-circle"></i> Saída</a></li>
+        </ul>
+
+        <h6 class="text-secondary">CONSULTAS</h6>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item"><a href="/estoque" class="nav-link text-white active"><i class="bi bi-box-seam"></i> Estoque</a></li>
+            <li class="nav-item"><a href="/pesquisar" class="nav-link text-white"><i class="bi bi-search"></i> Pesquisar</a></li>
+            <li class="nav-item"><a href="/historico" class="nav-link text-white"><i class="bi bi-clock-history"></i> Histórico</a></li>
+        </ul>
+
+        <h6 class="text-secondary">CONTROLE</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a href="/editar" class="nav-link text-white"><i class="bi bi-pencil-square"></i> Editar Produtos</a></li>
+            <li class="nav-item"><a href="/validade" class="nav-link text-white"><i class="bi bi-exclamation-triangle"></i> Validades</a></li>
+
+            <li class="nav-item mt-3">
+                <a href="/" class="nav-link text-white"><i class="bi bi-house"></i> Dashboard</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- CONTEÚDO -->
+    <div class="content p-4" style="flex:1;">
+
+        <h2 class="mb-4">Estoque Completo</h2>
+
+        <!-- Buscar Produto -->
+        <div class="card p-3 shadow-sm mb-4">
+            <label class="form-label"><b>Filtrar Produto</b></label>
+            <input type="text" id="filtro" class="form-control" placeholder="Digite parte do nome...">
+        </div>
+
+        <div id="resumo" class="alert alert-info d-none"></div>
+
+        <!-- TABELA -->
+        <div class="tabela-scroll">
+            <table class="table table-bordered table-striped" id="tabelaEstoque">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Produto</th>
+                        <th>Lote</th>
+                        <th>Validade</th>
+                        <th>Dias</th>
+                        <th>Quantidade</th>
+                        <th>Status</th>
+                        <th>Última Atualização</th>
+                        <th style="width:140px;">Ações</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+
+
+<!-- JS -->
+<script>
+// ==========================================================
+// Carregar estoque
+// ==========================================================
+let estoque = [];
+
+function carregarEstoque() {
+    fetch("/api/estoque")
+        .then(res => res.json())
+        .then(data => {
+            estoque = data;
+            renderTabela(data);
+        });
+}
+
+// ==========================================================
+// Renderizar tabela
+// ==========================================================
+function renderTabela(lista) {
+    const tbody = document.querySelector("#tabelaEstoque tbody");
+    const resumo = document.getElementById("resumo");
+
+    tbody.innerHTML = "";
+
+    if (lista.length === 0) {
+        resumo.classList.remove("d-none");
+        resumo.innerHTML = "Nenhum item encontrado.";
+        return;
+    }
+
+    resumo.classList.remove("d-none");
+    resumo.innerHTML = `<b>Total de itens:</b> ${lista.length}`;
+
+    lista.sort((a,b)=> a.Produto.localeCompare(b.Produto))
+        .forEach(item => {
+
+        let dias = "-";
+        if (item.Validade && item.Validade !== "0000-00-00") {
+            let dt = new Date(item.Validade);
+            dias = Math.floor((dt - new Date()) / (1000*60*60*24));
+        }
+
+        let classe = "normal";
+        if (dias !== "-" && dias < 0) classe = "vencido";
+        else if (dias < 10) classe = "perto";
+        else if (dias < 45) classe = "alerta";
+
+        tbody.innerHTML += `
+            <tr class="${classe}">
+                <td>${item.Produto}</td>
+                <td>${item.Lote}</td>
+                <td>${item.Validade}</td>
+                <td>${dias}</td>
+                <td>${item.Quantidade}</td>
+                <td>${item.Status}</td>
+                <td>${item["Última Atualização"] || ""}</td>
+
+                <td>
+                    <button class="acao-btn btn-lote" onclick="excluirLote('${item.Produto}','${item.Lote}')">
+                        <i class="bi bi-trash"></i> Lote
+                    </button>
+
+                    <button class="acao-btn btn-produto" onclick="excluirProduto('${item.Produto}')">
+                        <i class="bi bi-x-circle"></i> Produto
+                    </button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+// ==========================================================
+// Excluir lote
+// ==========================================================
+function excluirLote(produto, lote) {
+
+    if (!confirm(`Excluir o lote ${lote} do produto ${produto}?`)) return;
+
+    fetch("/api/excluir_lote", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ produto, lote })
+    })
+    .then(res=>res.json())
+    .then(()=>{
+        carregarEstoque();
+    });
+}
+
+// ==========================================================
+// Excluir PRODUTO (todos os lotes)
+// ==========================================================
+function excluirProduto(produto) {
+
+    if (!confirm(`Excluir TODOS os lotes do produto:\n${produto}?`)) return;
+
+    fetch("/api/excluir_produto", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body:JSON.stringify({ produto })
+    })
+    .then(res=>res.json())
+    .then(()=>{
+        carregarEstoque();
+    });
+}
+
+// ==========================================================
+// Filtro de busca
+// ==========================================================
+document.getElementById("filtro").addEventListener("input", function() {
+    const termo = this.value.toLowerCase();
+    const filtrado = estoque.filter(item =>
+        item.Produto.toLowerCase().includes(termo)
+    );
+    renderTabela(filtrado);
+});
+
+carregarEstoque();
+</script>
+
+</body>
+</html>

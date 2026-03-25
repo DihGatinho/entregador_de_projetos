@@ -1,0 +1,226 @@
+/* ==========================================
+   TEMA GERAL
+========================================== */
+
+:root {
+    --primary: #00b3ab;
+    --primary-dark1: #00998f;
+    --primary-dark2: #007f76;
+    --primary-light1: #33c2ba;
+    --primary-light2: #ccf0ec;
+    --text-dark: #1a1a1a;
+    --text-gray: #404040;
+    --background: #f5f9f8;
+    --danger: #ff4d4d;
+    --warning: #ffd93b;
+    --warning2: #ff914d;
+    --success: #00d97e;
+}
+
+/* Corpo geral */
+body {
+    background-color: var(--background);
+    font-family: Arial, Helvetica, sans-serif;
+    margin: 0;
+    padding: 0;
+    color: var(--text-dark);
+}
+
+.content {
+    flex: 1;
+    padding: 30px;
+}
+
+/* ==========================================
+   SIDEBAR LATERAL
+========================================== */
+
+.sidebar {
+    width: 260px;
+    min-height: 100vh;
+    background: var(--primary);
+    color: white;
+    padding: 22px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.12);
+}
+
+.sidebar h4 {
+    font-weight: bold;
+}
+
+.sidebar a {
+    display: block;
+    padding: 10px 8px;
+    margin-bottom: 6px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    border-radius: 6px;
+    transition: 0.2s;
+}
+
+.sidebar a:hover {
+    background: var(--primary-dark1);
+}
+
+.sidebar a.active {
+    background: var(--primary-dark2);
+    font-weight: bold;
+}
+
+/* ==========================================
+   CARDS E CONTAINERS
+========================================== */
+
+.card {
+    border-radius: 12px;
+    border: none;
+    background: #ffffff;
+}
+
+.shadow-sm {
+    box-shadow: 0 0 8px rgba(0,0,0,0.10) !important;
+}
+
+.card h4, .card h5 {
+    margin-bottom: 12px;
+}
+
+/* KPIs */
+.card-kpi {
+    padding: 22px;
+    border-radius: 14px;
+    color: white;
+    text-align: center;
+    box-shadow: 0 0 8px rgba(0,0,0,0.12);
+}
+
+.kpi-title {
+    font-size: 13px;
+    opacity: 0.85;
+}
+
+.kpi-green  { background: var(--primary); }
+.kpi-red    { background: var(--danger); }
+.kpi-orange { background: var(--warning2); }
+.kpi-blue   { background: #0275d8; }
+.kpi-yellow { background: var(--warning); color: #333; }
+
+/* ==========================================
+   TABELAS
+========================================== */
+
+table.table {
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 0 !important;
+}
+
+table.table thead {
+    background: var(--primary-dark2);
+    color: white;
+}
+
+table.table td, 
+table.table th {
+    vertical-align: middle;
+}
+
+/* Cores de validade */
+.lote-vermelho { background: #ffdddd !important; }
+.lote-laranja  { background: #ffe6cc !important; }
+.lote-amarelo  { background: #fffacc !important; }
+.lote-normal   { background: #e7ffe7 !important; }
+
+.hoje {
+    background: #d9f8e4 !important;
+    font-weight: bold;
+}
+
+/* ==========================================
+   BOTÕES
+========================================== */
+
+.btn-primary {
+    background: var(--primary);
+    border-color: var(--primary-dark1);
+    font-weight: bold;
+}
+
+.btn-primary:hover {
+    background: var(--primary-dark1);
+}
+
+.btn-success {
+    background: var(--success);
+    border-color: #00b86c;
+    font-weight: bold;
+}
+
+.btn-danger {
+    background: var(--danger);
+    border-color: #e04343;
+    font-weight: bold;
+}
+
+/* ==========================================
+   CAMPOS
+========================================== */
+
+input.form-control,
+select.form-control {
+    border-radius: 8px;
+    border: 1px solid #ccc;
+}
+
+/* ==========================================
+   NOTA DE SAÍDA
+========================================== */
+
+.nota-container {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    max-width: 850px;
+    margin: auto;
+    box-shadow: 0 0 12px rgba(0,0,0,0.1);
+}
+
+.linha-assinatura {
+    margin-top: 50px;
+    border-top: 1px solid #000;
+    width: 300px;
+}
+
+/* ==========================================
+   MOBILE
+========================================== */
+
+@media (max-width: 768px) {
+
+    .sidebar {
+        width: 100%;
+        min-height: auto;
+    }
+
+    .content {
+        padding: 18px;
+    }
+
+    table.table {
+        font-size: 14px;
+    }
+}
+
+/* ==========================================
+   FIX — TABELA ROLÁVEL (ESTOQUE)
+========================================== */
+
+.tabela-scroll {
+    max-height: 70vh;
+    overflow-y: auto;
+    overflow-x: hidden;
+    background: white;
+    border-radius: 8px;
+    padding-right: 4px;
+}

@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico de Saídas - Beep Estoque</title>
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="/static/css/custom.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
+
+    <style>
+        .hoje {
+            background: #d9f8e4 !important;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<div class="d-flex">
+
+    <!-- MENU LATERAL -->
+    <div class="sidebar bg-dark text-white p-3" style="width: 260px; min-height: 100vh;">
+        <h4 class="text-center mb-4">Beep Estoque</h4>
+
+        <h6 class="text-secondary">MOVIMENTAÇÕES</h6>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item"><a href="/entrada" class="nav-link text-white"><i class="bi bi-plus-circle"></i> Entrada</a></li>
+            <li class="nav-item"><a href="/saida" class="nav-link text-white"><i class="bi bi-dash-circle"></i> Saída</a></li>
+        </ul>
+
+        <h6 class="text-secondary">CONSULTAS</h6>
+        <ul class="nav flex-column mb-3">
+            <li class="nav-item"><a href="/estoque" class="nav-link text-white"><i class="bi bi-box-seam"></i> Estoque</a></li>
+            <li class="nav-item"><a href="/pesquisar" class="nav-link text-white"><i class="bi bi-search"></i> Pesquisar</a></li>
+            <li class="nav-item"><a href="/historico" class="nav-link text-white active"><i class="bi bi-clock-history"></i> Histórico</a></li>
+        </ul>
+
+        <h6 class="text-secondary">CONTROLE</h6>
+        <ul class="nav flex-column">
+            <li class="nav-item"><a href="/editar" class="nav-link text-white"><i class="bi bi-pencil-square"></i> Editar Produtos</a></li>
+            <li class="nav-item"><a href="/validade" class="nav-link text-white"><i class="bi bi-exclamation-triangle"></i> Validades</a></li>
+         <!-- VOLTAR PARA DASHBOARD -->
+            <li class="nav-item mt-3">
+                <a href="/" class="nav-link text-white"><i class="bi bi-house"></i> Dashboard</a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- CONTEÚDO -->
+    <div class="content p-4" style="flex: 1;">
+
+        <h2 class="mb-4">Histórico de Saídas</h2>
+
+        <!-- BUSCA -->
+        <div class="card p-3 shadow-sm mb-4">
+            <label class="form-label"><b>Filtrar por produto (opcional)</b></label>
+            <input type="text" id="filtro" class="form-control" placeholder="Ex: dipirona..." list="listaProdutos">
+
+            <!-- Auto-complete -->
+            <datalist id="listaProdutos"></datalist>
+
+            <button class="btn btn-primary mt-3" onclick="filtrar()">
+                <i class="bi bi-search"></i> Filtrar
+            </button>
+        </div>
+
+        <div id="resumo" class="alert alert-info d-none"></div>
+
+        <table class="table table-bordered table-striped mt-3" id="tabelaHistorico">
+            <thead class="table-dark">
+                <tr>
+                    <th>Data</th>
+                    <th>Produto</th>
+                    <th>Lote</th>
+                    <th>Quantidade</th>
+                    <th>Responsável</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        </table>
+
+    </div>
+</div>
+
+<script>
+let historico = [];
+
+// =======================
+// CARREGAR HISTÓRICO
+// =======================
+function carregar() {
+    fetch("/api/historico")
+        .then(res => res.json())
+        .then(dados => {
+
+            // Ordena por data (mais recente primeiro)
+            historico = dados.sort((a, b) => {
+                const d1 = new Date(a.Data.split("/").reverse().join("-"));
+                const d2 = new Date(b.Data.split("/").reverse().join("-"));
+                return d2 - d1;
+            });
+
+            preencherAutoComplete(dados);
+            renderTabela(historico);
+        });
+}
+
+// =======================
+// PREENCHER AUTO-COMPLETE
+// =======================
+function preencherAutoComplete(lista) {
+    const datalist = document.getElementById("listaProdutos");
+    const produtos = [...new Set(lista.map(i => i.Produto))];
+
+    datalist.innerHTML = produtos
+        .sort()
+        .map(p => `<option value="${p}">`)
+        .join("");
+}
+
+// =======================
+// RENDERIZAR TABELA
+// =======================
+function renderTabela(lista) {
+    const tbody = document.querySelector("#tabelaHistorico tbody");
+    const resumo = document.getElementById("resumo");
+
+    tbody.innerHTML = "";
+
+    if (lista.length === 0) {
+        resumo.classList.remove("d-none");
+        resumo.innerHTML = "Nenhuma saída encontrada.";
+        return;
+    }
+
+    resumo.classList.remove("d-none");
+    resumo.innerHTML = `<b>Total de registros:</b> ${lista.length}`;
+
+    const hoje = new Date().toLocaleDateString("pt-BR");
+
+    lista.forEach(item => {
+        const classeHoje = item.Data === hoje ? "hoje" : "";
+
+        tbody.innerHTML += `
+            <tr class="${classeHoje}">
+                <td>${item.Data}</td>
+                <td>${item.Produto}</td>
+                <td>${item.Lote}</td>
+                <td>${item.Quantidade}</td>
+                <td>${item.Responsável}</td>
+            </tr>
+        `;
+    });
+}
+
+// =======================
+// FILTRAR
+// =======================
+function filtrar() {
+    const termo = document.getElementById("filtro").value.toLowerCase();
+
+    if (!termo) {
+        renderTabela(historico);
+        return;
+    }
+
+    const filtrado = historico.filter(i =>
+        i.Produto.toLowerCase().includes(termo)
+    );
+
+    renderTabela(filtrado);
+}
+
+// Inicializar
+carregar();
+</script>
+
+</body>
+</html>
